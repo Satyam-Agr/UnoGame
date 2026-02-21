@@ -1,0 +1,227 @@
+/* ===== RESET ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #1a1a1a;
+    color: white;
+}
+
+
+/* ===== MAIN LAYOUT ===== */
+.game {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    justify-content: space-between;
+}
+
+
+/* ===== PLAYERS ===== */
+.game__players {
+    display: flex;
+    height: 100px;
+}
+
+.player {
+    position: absolute;
+    padding: 10px 15px;
+    background: #2a2a2a;
+    border-radius: 8px;
+    opacity: 0.4;
+    transition: 0.3s ease;
+}
+
+.player--active {
+    opacity: 1;
+    border: 2px solid #ffcc00;
+}
+
+.player--top {
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.player--left {
+    top: 50%;
+    left: 10px;
+}
+
+.player--right {
+    top: 50%;
+    right: 10px;
+}
+
+.player--bottom {
+    bottom: 50px;
+    left: 46%;
+}
+
+.player__info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.player__uno {
+    color: red;
+    font-weight: bold;
+}
+
+
+/* ===== BOARD ===== */
+.game__board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.board__piles {
+    display: flex;
+    gap: 40px;
+    margin: 20px 0;
+}
+
+.pile {
+    width: 80px;
+    height: 120px;
+    background: #333;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.board__direction {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.board__color-indicator {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.board__message {
+    margin-top: 10px;
+}
+
+
+/* ===== HAND ===== */
+.game__hand {
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+}
+
+.hand__cards {
+    display: flex;
+    gap: 10px;
+}
+
+.card {
+    width: 60px;
+    height: 90px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.card--valid:hover {
+    transform: translateY(-8px);
+}
+
+.card--disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+
+/* ===== BUTTONS ===== */
+.game__actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    padding: 10px;
+    align-items: flex-end;
+}
+
+.btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn--draw {
+    background: #0066ff;
+    color: white;
+}
+
+.btn--uno {
+    background: #ff0000;
+    color: white;
+}
+
+.btn--restart {
+    background: #00cc66;
+    color: white;
+}
+
+.btn--exit {
+    background: #999;
+    color: black;
+}
+
+
+/* ===== MODAL ===== */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+ 
+.modal__content {
+    background: #222;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.hidden {
+    display: none;
+}
+
+.card--red {
+    background: #d32f2f;
+}
+
+.card--blue {
+    background: #1976d2;
+}
+
+.card--green {
+    background: #388e3c;
+}
+
+.card--yellow {
+    background: #fbc02d;
+    color: black;
+}
+.card--wild {
+    background: black;
+    color: whitesmoke;
+}

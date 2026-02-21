@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UNO Lobby</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+    <div class="lobby-container">
+
+        <h1>Room: <span class="room-code"><%= roomId %></span></h1>
+
+        <div class="player-list">
+            <% players.forEach(player => { %>
+                <div class="player-item">
+                    <%= player %>
+                </div>
+            <% }) %>
+        </div>
+
+        <div class="lobby-actions">
+            <button class="start-btn hidden">Start Game</button>
+
+            <button class="leave-btn">Leave</button>
+        </div>
+
+    </div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const roomId = "<%= roomId %>";
+</script>
+<script src="/js/lobby.js"></script>
+</body>
+</html>

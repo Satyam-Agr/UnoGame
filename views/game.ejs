@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UNO Game: <%= roomId %></title>
+    <link rel="stylesheet" href="/css/game.css">
+</head>
+<body>
+
+<div class="game">
+
+    <!-- ===== PLAYERS AREA ===== -->
+    <div class="game__players">
+
+        <!-- Top Player -->
+        <div class="player player--top" id="player-0">
+            <div class="player__info">
+                <span class="player__name">Player 1</span>
+                <span class="player__card-count">Cards: 0</span>
+                <span class="player__uno hidden">UNO!</span>
+            </div>
+        </div>
+        <!-- Bottom Player (Current User View) -->
+        <div class="player player--bottom player--active" id="player-3">
+            <div class="player__info">
+                <span class="player__name">You(Player 4)</span>
+                <span class="player__card-count">Cards: 0</span>
+                <span class="player__uno hidden">UNO!</span>
+            </div>
+        </div>
+        <%if(players.length > 1) { %>
+            <!-- Left Player -->
+            <div class="player player--left" id="player-1">
+                <div class="player__info">
+                    <span class="player__name">Player 2</span>
+                    <span class="player__card-count">Cards: 0</span>
+                    <span class="player__uno hidden">UNO!</span>
+                </div>
+            </div>
+        <% } %>
+        <% if(players.length > 2) { %>
+            <!-- Right Player -->
+            <div class="player player--right" id="player-2">
+                <div class="player__info">
+                    <span class="player__name">Player 3</span>
+                    <span class="player__card-count">Cards: 0</span>
+                    <span class="player__uno hidden">UNO!</span>
+                </div>
+            </div>
+        <% } %>
+    </div>
+
+
+    <!-- ===== CENTER BOARD ===== -->
+    <div class="game__board">
+
+        <div class="board__direction" id="direction-indicator">
+            →
+        </div>
+
+        <div class="board__piles">
+            <div class="pile pile--draw" id="draw-pile">
+                Draw
+            </div>
+
+            <div class="pile pile--discard" id="discard-pile">
+                Discard
+            </div>
+        </div>
+
+        <div class="board__color-indicator" id="color-indicator">
+            Current Color: -
+        </div>
+
+        <div class="board__message" id="game-message">
+            Game Started
+        </div>
+
+    </div>
+
+
+    <!-- ===== PLAYER HAND ===== -->
+    <div class="game__hand">
+        <div class="hand__cards" id="hand-container">
+            <!-- Cards injected by JS -->
+        </div>
+    </div>
+
+
+    <!-- ===== ACTION PANEL ===== -->
+    <div class="game__actions">
+        <button class="btn btn--draw" id="draw-btn">Draw Card</button>
+        <button class="btn btn--uno" id="uno-btn">Call UNO</button>
+        <button class="btn btn--restart" id="restart-btn">Restart</button>
+        <button class="btn btn--exit" id="exit-btn">Exit</button>
+    </div>
+
+</div>
+
+
+<!-- ===== WINNER MODAL ===== -->
+<div class="modal hidden" id="winner-modal">
+    <div class="modal__content">
+        <h2 id="winner-text">Player Wins!</h2>
+        <button class="btn btn--restart">Play Again</button>
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const roomId = "<%= roomId %>";
+</script>
+<script src="/js/game.js"></script>
+</body>
+</html>

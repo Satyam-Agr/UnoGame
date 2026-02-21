@@ -1,0 +1,98 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Account Icon */
+.account-icon {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+/* Home Page */
+.home-container {
+    display: flex;
+    gap: 50px;
+}
+
+.home-card {
+    background: rgba(255,255,255,0.1);
+    padding: 40px;
+    border-radius: 12px;
+    text-align: center;
+    width: 250px;
+}
+
+.home-card h2 {
+    margin-bottom: 20px;
+}
+
+.home-card input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    border: none;
+}
+
+.home-card button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    background: #ff5252;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Lobby */
+.lobby-container {
+    text-align: center;
+    width: 400px;
+}
+
+.room-code {
+    color: #ff5252;
+}
+
+.player-list {
+    margin: 30px 0;
+}
+
+.player-item {
+    background: rgba(255,255,255,0.1);
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 8px;
+}
+
+.lobby-actions button {
+    padding: 10px 20px;
+    margin: 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.start-btn {
+    background: #4caf50;
+    color: white;
+}
+
+.leave-btn {
+    background: #f44336;
+    color: white;
+}
+.hidden {
+    display: none;
+}
