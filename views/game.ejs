@@ -15,7 +15,7 @@
         <!-- Top Player -->
         <div class="player player--top" id="player-0">
             <div class="player__info">
-                <span class="player__name">Player 1</span>
+                <span class="player__name"><%= players[0] %></span>
                 <span class="player__card-count">Cards: 0</span>
                 <span class="player__uno hidden">UNO!</span>
             </div>
@@ -23,26 +23,26 @@
         <!-- Bottom Player (Current User View) -->
         <div class="player player--bottom player--active" id="player-3">
             <div class="player__info">
-                <span class="player__name">You(Player 4)</span>
+                <span class="player__name"><%= players[1] %></span>
                 <span class="player__card-count">Cards: 0</span>
                 <span class="player__uno hidden">UNO!</span>
             </div>
         </div>
-        <%if(players.length > 1) { %>
+        <%if(players.length > 2) { %>
             <!-- Left Player -->
             <div class="player player--left" id="player-1">
                 <div class="player__info">
-                    <span class="player__name">Player 2</span>
+                    <span class="player__name"><%= players[2] %></span>
                     <span class="player__card-count">Cards: 0</span>
                     <span class="player__uno hidden">UNO!</span>
                 </div>
             </div>
         <% } %>
-        <% if(players.length > 2) { %>
+        <% if(players.length > 3) { %>
             <!-- Right Player -->
             <div class="player player--right" id="player-2">
                 <div class="player__info">
-                    <span class="player__name">Player 3</span>
+                    <span class="player__name"><%= players[3] %></span>
                     <span class="player__card-count">Cards: 0</span>
                     <span class="player__uno hidden">UNO!</span>
                 </div>
@@ -103,6 +103,16 @@
     <div class="modal__content">
         <h2 id="winner-text">Player Wins!</h2>
         <button class="btn btn--restart">Play Again</button>
+    </div>
+</div>
+
+<!-- ===== Wild color select MODAL ===== -->
+<div class="modal hidden" id="wild-color-modal">
+    <div class="modal__content">
+        <div class="card card--valid card--green" id="select-green"></div>
+        <div class="card card--valid card--yellow" id="select-yellow"></div>
+        <div class="card card--valid card--red" id="select-red"></div>
+        <div class="card card--valid card--blue" id="select-blue"></div>
     </div>
 </div>
 

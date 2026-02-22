@@ -1,6 +1,6 @@
 import express from "express";
 
-export default function viewRoutes(games)
+export default function viewRoutes(players, games)
 {
     const router=express.Router();
 
@@ -10,7 +10,7 @@ export default function viewRoutes(games)
 
     router.get('/game/:roomId', (req, res) => {
         const { roomId } = req.params;
-        res.render("game", { roomId ,players: game.players.map(id =>players[id]?.name || "Player X")});
+        res.render("game", { roomId ,players: games[roomId]?.players.map(id =>players[id]?.name || "Player X") || []});
     });
 
     router.get("/lobby/:roomId", (req, res) => {

@@ -1,49 +1,7 @@
-import { v4 as uuid } from 'uuid';//for unique playerId generation
-import { initGameState } from '../game/gameLogic.js';
-export default function lobbySocket(io, games, players) {
+import { initGameState , nextTurn} from '../game/gameLogic.js';
 
-  function generateRoomId() {
-    return Math.random().toString(36).substring(2, 6).toUpperCase();
-  }
-  function playerNames(playerIds) {
-    const names = playerIds.map(id => {
-        if (!players[id]) {
-            return "Player X";
-        }
-        return players[id].name;
-    });
-    return names;
-  }
-  //new player joined the server
-  io.on("connection",(socket)=>{
-    //initialize playerId for this socket connection
-    let testId = socket.handshake.auth.playerId;
-    if (!testId || !players[testId]) {
-        console.log("No playerId provided, generating new one.");
-        const newId = uuid();
-        socket.emit("playerId", {playerId: newId});
-        testId = newId;
-        players[newId] = {
-            socketId: socket.id,
-            name: null,
-            roomId: null,
-            isConnected: true,
-            disconnectTimer: null
-        };
-    }
-    const playerId = testId;
+export default function lobbyHandlers(playerId, socket, io, games, players) {
 
-    console.log("User connected: "+socket.id+" with playerId: "+playerId);
-    //reconnect logic
-    players[playerId].socketId = socket.id;
-    players[playerId].isConnected = true;
-    if (players[playerId].disconnectTimer) {
-        clearTimeout(players[playerId].disconnectTimer);
-        players[playerId].disconnectTimer = null;
-    }
-    //temporary logs to check current games and players
-    console.log("Current games:", games);
-    console.log("Current players:", players);
     //host logic
     socket.on("checkHost", ({ roomId }) => {
         const game = games[roomId];
@@ -73,6 +31,7 @@ export default function lobbySocket(io, games, players) {
         //no errors, start the game
         game.started = true;
         game.state = initGameState(game.players, playerNames(game.players));
+        nextTurn(game.state);//set first player's cards as valid to play
         io.to(roomId).emit("gameStarted");
     });
     //user creates a room
@@ -162,5 +121,17 @@ export default function lobbySocket(io, games, players) {
             io.to(roomId).emit("hostUpdate", { Host: game.hostId });
         }
     }
-  })
+    //helper functions
+    function generateRoomId() {
+    return Math.random().toString(36).substring(2, 6).toUpperCase();
+    }
+    function playerNames(playerIds) {
+    const names = playerIds.map(id => {
+        if (!players[id]) {
+            return "Player X";
+        }
+        return players[id].name;
+    });
+    return names;
+    }
 }

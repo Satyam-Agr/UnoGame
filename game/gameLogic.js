@@ -4,7 +4,7 @@ export function initGameState(playerIds, playerNames)
 {
     const state = {
         players: [],
-        currentPlayerIndex: 0,
+        currentPlayerIndex: -1,
         direction: 1,
         currentColor: null,
         topCard: null,
@@ -31,6 +31,7 @@ export function initGameState(playerIds, playerNames)
         const card = deck.draw();
         if (card.color !== "wild") {
             state.topCard = card;
+            state.currentColor = card.color;
             break;
         }
         else {
@@ -39,22 +40,15 @@ export function initGameState(playerIds, playerNames)
     }
     return state;
 }
-//validate if the played card is valid
-export function isValid(card,state)
-{
-    if(!card)
-        return false;
-    return (card.color===state.currentColor||card.value===state.topCard.value||card.color==='wild')
-}
 //play a card
-export function playCard(playerIndex, cardIndex, state,) {
+export function playCard(playerIndex, cardIndex, wildColor, state) {
     if (state.gameOver) return false;
 
     const player = state.players[playerIndex];
     const selectedCard = player.hand[cardIndex];
 
     // Validate move
-    if (!isValid(selectedCard,state)) {
+    if (!isValid(selectedCard,state,playerIndex)) {
         return false;
     }
 
@@ -62,11 +56,12 @@ export function playCard(playerIndex, cardIndex, state,) {
     player.hand.splice(cardIndex, 1);
 
     // Update top card
+    state.discardPile.push(state.topCard);
     state.topCard = selectedCard;
 
     // Update current color
-    if(selectedCard.color==="wild")
-        state.currentColor = wildColor(state.currentPlayerIndex, state);
+    if(wildColor)
+        state.currentColor = wildColor;
     else
         state.currentColor = selectedCard.color;
 
@@ -81,21 +76,46 @@ export function playCard(playerIndex, cardIndex, state,) {
     }
     return true;
 }
-//draw cards
-export function drawCards(playerIndex,count,state)
+export function drawCardBtn(playerIndex,state)
 {
-    //select player
-    const player=state.players[playerIndex];
-    player.saidUNO=false;
-    const colors=['green','red','yellow','blue'];//temp
-    while(count-->0)
+    if(playerIndex !== state.currentPlayerIndex) return;//only allow current player to draw cards
+        drawCards(playerIndex, 1, state);
+    const handLength = state.players[playerIndex].hand.length;
+    const cardDrawn = state.players[playerIndex].hand[handLength-1];
+    //if the drawn card is playable, mark it as valid so that player can play it and only it
+    if(isValid(cardDrawn,state,playerIndex))
     {
-        //draw from the draw pile
-        const card={ color: colors[Math.floor(Math.random()*4)], value: Math.floor(Math.random()*10) };// temp
-
-        //update state
-        player.hand.push(card);
-        state.drawPileCount--;
+        for( let card of state.players[state.currentPlayerIndex]?.hand ?? [])
+        {
+            card.valid = false;//reset valid status of cards
+        }
+        cardDrawn.valid = true;
+        return;
+    }
+    nextTurn(state);
+}
+//declare uno
+export function declareUNO(playerIndex,state)
+{
+    const player = state.players[playerIndex];
+    if(player.hand.length==1)
+        player.saidUNO = true;
+}
+//change turn
+export function nextTurn(state)
+{
+    for( let card of state.players[state.currentPlayerIndex]?.hand ?? [])
+    {
+        card.valid = false;//reset valid status of cards at the start of each turn
+    }
+    state.currentPlayerIndex =(state.currentPlayerIndex + state.direction + state.players.length) 
+    % state.players.length;
+    for( let card of state.players[state.currentPlayerIndex].hand)
+    {
+        if(isValid(card,state,state.currentPlayerIndex))
+            card.valid = true;
+        else
+            card.valid = false;
     }
 }
 //helper functions
@@ -107,17 +127,17 @@ function createDeck()
     {
         for(let value of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "skip", "reverse", "draw2"])
         {
-            deck.push({color, value});
+            deck.push({color, value, valid: false});
             if(value !== 0)
             {
-                deck.push({color, value});
+                deck.push({color, value, valid: false});//two of each card except 0
             }
         }
     }
     for(let i=0; i<4; i++)
     {
-        deck.push({color: "wild", value: "wild"});
-        deck.push({color: "wild", value: "wildDraw4"});
+        deck.push({color: "wild", value: "wild", valid: false});
+        deck.push({color: "wild", value: "wildDraw4", valid: false});
     }
     return Shuffle.shuffle({deck});
 }
@@ -149,7 +169,7 @@ function applyCardEffect(card, state) {
             nextTurn(state);
             break;
 
-        case "wilddraw4":
+        case "wildDraw4":
             nextTurn(state);
             drawCards(state.currentPlayerIndex, 4, state);
             nextTurn(state);
@@ -163,16 +183,17 @@ function applyCardEffect(card, state) {
             nextTurn(state);
     }
 }
-//next player index
-function nextTurn(state)
+//draw cards
+function drawCards(playerIndex,count,state)
 {
-    state.currentPlayerIndex =(state.currentPlayerIndex + state.direction + state.players.length) 
-    % state.players.length;
+    const player = state.players[playerIndex];
+    player.saidUNO=false;//reset uno declaration if player draws a card
+    state.drawPile.deal(count, [player.hand]);
 }
-//choose a color for wild card
-function wildColor()
+//validate if the played card is valid
+function isValid(card,state,playerIndex)
 {
-    //temp
-    const colors=['green','red','yellow','blue'];
-    return colors[Math.floor(Math.random()*4)];
+    if(!card || state.currentPlayerIndex!==playerIndex)
+        return false;
+    return (card.color===state.currentColor||card.value===state.topCard.value||card.color==='wild')
 }

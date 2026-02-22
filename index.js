@@ -6,8 +6,7 @@ import http from 'http'//to create a http server
 import {Server} from 'socket.io'//for dynamic communication 
 //file connections
 import viewRoutes from './routes/viewRoutes.js'//import routes
-import lobbySocket from './sockets/lobbySocket.js';
-import gameScocket from './sockets/gameSocket.js';
+import registerSockets from './sockets/index.js'//import socket logic;
 
 const __filename = fileURLToPath(import.meta.url);//absoluti path of this file
 const __dirname = path.dirname(__filename);//absoluti path of this file's directory
@@ -43,7 +42,7 @@ const games = {};
 const players = {};
 
 //all routes
-app.use('/',viewRoutes(games))
+app.use('/',viewRoutes(players, games))
 
 //404 page(catches all other routes)
 app.use((req, res) => {
@@ -51,5 +50,4 @@ app.use((req, res) => {
 })
 
 //connect socket module
-lobbySocket(io, games, players);
-gameScocket(io, games, players);
+registerSockets(io, games, players);

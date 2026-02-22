@@ -1,6 +1,5 @@
-//to do:-
-//add homerules
 let state={};//game state
+let thisPlayeridx=0;//current player index
 //socket connection
 const playerId = localStorage.getItem("playerId");//connect to socket with playerId for authentication
 
@@ -17,7 +16,12 @@ socket.on("connect", () => {
 
 socket.on("stateUpdate", (newState) => {
     state = newState;
+    thisPlayeridx = state.players.findIndex(p => p.id === playerId);
     renderGame();
+});
+// win condition
+socket.on("gameOver", (winnerName) => {
+    handleVictory(winnerName);
 });
 
 //error handling
@@ -27,43 +31,20 @@ socket.on("errorMessage", ({msg, leave}) => {
         window.location.href = `/`;
     }
 });
-//helper functions to make a card
-function makeCard(card,idx=-1)
-{
-    const cardDiv = document.createElement("div");
-    // Base class
-    cardDiv.classList.add("card");
-    // Color modifier class
-    cardDiv.classList.add(`card--${card.color}`);
-    // Display value
-    cardDiv.textContent = card.value;
-    //card playable or not
-    if(idx===-1){
-        cardDiv.classList.add('card--disabled');
-    }
-    else{
-        cardDiv.classList.add('card--valid');
-        // Click event
-        cardDiv.addEventListener("click", () => {
-            handleCardClick(idx);
-        });
-    }
-    return cardDiv;
-}
+
 //render functions
 function renderPlayer()
 {
     const players=document.querySelectorAll(".player");
+    console.log("Rendering players...");
     for(let i=0;i<state.players.length;i++)
     {
+        console.log("Rendering player:", state.players[i].name);
         const playerDiv=players[i];
         const player=state.players[i];
-        const nameEl = playerDiv.querySelector(".player__name");
         const cardEl = playerDiv.querySelector(".player__card-count");
         const unoEl = playerDiv.querySelector(".player__uno");
         
-        //update name & length 
-        nameEl.textContent = player.name;
         cardEl.textContent = `Card: ${player.hand.length}` ;
         
         //hide uno
@@ -83,10 +64,11 @@ function renderHand()
 {
     const handDiv=document.querySelector('#hand-container');
     handDiv.innerHTML="";
-    const cards=state.players[state.currentPlayerIndex].hand;
+    const cards=state.players[thisPlayeridx].hand;
+    //check if card is valid to play
     for(let i=0;i<cards.length;i++)
     {
-        if(isValid(cards[i]))
+        if(cards[i].valid)
             handDiv.appendChild(makeCard(cards[i],i));
         else
             handDiv.appendChild(makeCard(cards[i]));
@@ -105,7 +87,7 @@ function renderBoard()
     else
         dirDiv.innerHTML="<-";
     //update draw pile
-    drawDiv.textContent=`Draw - ${state.drawPileCount}`;
+    drawDiv.textContent=`Draw - ${state.drawPile.length}`;
     //update discardpile
     discardDiv.innerHTML='';
     discardDiv.appendChild(makeCard(state.topCard));
@@ -124,28 +106,94 @@ function renderGame()
     renderBoard();
 }
 //click events
-//play a card
-function handleCardClick(idx)
-{
-    playCard(state.currentPlayerIndex,idx);
-    renderGame();
-}
 //draw a card
 document.querySelector('#draw-btn').addEventListener("click",()=>{
     if(state.gameOver)
         return;
-    //draw a card
-    drawCards(state.currentPlayerIndex,1);
-    nextTurn();
-    //render the next turn
-    renderGame();
+    socket.emit("drawCard");
 });
 //declare uno
 document.querySelector('#uno-btn').addEventListener("click",()=>{
-    const index=state.currentPlayerIndex;
-    if(state.players[index].hand.length==2)
-        state.players[index].saidUNO=true;
+    if(state.gameOver)        return;
+    socket.emit("declareUNO");
 });
 document.querySelector('#restart-btn').addEventListener("click",()=>{
     renderGame();
 });
+
+//helper functions to make a card
+function makeCard(card,cardIdx=-1)
+{
+    const cardDiv = document.createElement("div");
+    // Base class
+    cardDiv.classList.add("card");
+    // Color modifier class
+    cardDiv.classList.add(`card--${card.color}`);
+    // Display value
+    cardDiv.textContent = card.value;
+    //card playable or not
+    if(cardIdx===-1){
+        cardDiv.classList.add('card--disabled');
+    }
+    else{
+        cardDiv.classList.add('card--valid');
+        // Click event
+        cardDiv.addEventListener("click", ()=> {
+            handelCardClick(cardIdx);
+        });
+    }
+    return cardDiv;
+}
+function handelCardClick(cardIdx)
+{
+    const card = state.players[thisPlayeridx].hand[cardIdx];
+    if(card.color === 'wild')
+    {
+        const wildColorSelect = document.querySelector('#wild-color-modal');
+        wildColorSelect.classList.remove('hidden');
+        for(let color of ['green', 'yellow', 'red', 'blue'])
+        {
+            const selectedColor=wildColorSelect.querySelector(`#select-${color}`);
+            selectedColor.onclick = ()=>{
+                wildColorSelect.classList.add('hidden');
+                socket.emit("playCard", { cardIndex: cardIdx, wildColor:color });
+            };
+        }
+    }
+    else
+        socket.emit("playCard", { cardIndex: cardIdx });
+}
+
+
+function handleVictory(winnerName) {
+    // win condition
+    const winnerModal = document.getElementById("winner-modal");
+    const winnerText = document.getElementById("winner-text");
+
+    // Update text
+    winnerText.textContent = `${winnerName} Wins!`;
+
+    // Show modal
+    winnerModal.classList.remove("hidden");
+
+    // Disable all buttons
+    document.querySelectorAll("button").forEach(btn => {
+        btn.disabled = true;
+    });
+
+    // Countdown
+    let timeLeft = 5;
+    const countdown = document.createElement("p");
+    countdown.textContent = `Returning to home in ${timeLeft}...`;
+    winnerModal.querySelector(".modal__content").appendChild(countdown);
+
+    const interval = setInterval(() => {
+        timeLeft--;
+        countdown.textContent = `Returning to home in ${timeLeft}...`;
+
+        if (timeLeft === 0) {
+            clearInterval(interval);
+            window.location.href = "/";
+        }
+    }, 1000);
+}
