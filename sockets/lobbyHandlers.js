@@ -1,4 +1,6 @@
 import { initGameState , nextTurn} from '../game/gameLogic.js';
+import { removePlayerFromRoom } from './index.js';
+import randomstring from 'randomstring';
 
 export default function lobbyHandlers(playerId, socket, io, games, players) {
 
@@ -36,7 +38,7 @@ export default function lobbyHandlers(playerId, socket, io, games, players) {
     });
     //user creates a room
     socket.on("createRoom",({name})=>{
-        const roomId=generateRoomId();
+        const roomId=randomstring.generate({capitalization: 'uppercase' , length: 6 , charset: 'alphabetic'});
         players[playerId].name = name;
         players[playerId].roomId = roomId;
         games[roomId]={
@@ -55,16 +57,16 @@ export default function lobbyHandlers(playerId, socket, io, games, players) {
         players[playerId].name = name;
         players[playerId].roomId = roomId;
         if(!game){
-            socket.emit("errorMessage","Room not found");
+            socket.emit("errorMessage",{ msg: "Room not found" , leave: true});
             return;
         }
         if (game.started) {
-            socket.emit("errorMessage", "Game already started");
+            socket.emit("errorMessage", { msg: "Game already started", leave: true });
             return;
         }
 
         if (game.players.length >= 4) {
-            socket.emit("errorMessage", "Room full");
+            socket.emit("errorMessage", { msg: "Room full" , leave: true });
             return;
         }
 
@@ -90,48 +92,17 @@ export default function lobbyHandlers(playerId, socket, io, games, players) {
     });
     //leaving a room
     socket.on("leaveRoom", ({ roomId }) => {
-        removePlayerFromLobby(playerId, roomId);
+        removePlayerFromRoom(playerId, roomId, games, players, io);
     });
-    //disconnect
-    socket.on("disconnect", () => {
-        console.log("User disconnected:", socket.id);
-        if (!players[playerId]) return;
-        players[playerId].isConnected = false;
-        players[playerId].disconnectTimer = setTimeout(() => {
-            if (!players[playerId].isConnected) {
-                removePlayerFromLobby(playerId, players[playerId].roomId);
-                //remove player form players list
-                delete players[playerId];
-            }
-        }, 10000); // 10 seconds grace period        
-    });
-    //helper function
-    function removePlayerFromLobby(playerId, roomId) {
-        const game = games[roomId];
-        if (!game) return;
-        game.players = game.players.filter(p => p !== playerId);
-        if(players[playerId])
-            players[playerId].roomId = null;
-        io.to(roomId).emit("lobbyUpdate", playerNames(game.players));
-        //if host leaves, assign new host. If no players left, delete the game.
-        if (game.players.length === 0) {
-            delete games[roomId];
-        } else if (game.hostId === playerId) {
-            game.hostId = game.players[0];
-            io.to(roomId).emit("hostUpdate", { Host: game.hostId });
-        }
-    }
     //helper functions
-    function generateRoomId() {
-    return Math.random().toString(36).substring(2, 6).toUpperCase();
-    }
+    //get player names from player ids
     function playerNames(playerIds) {
-    const names = playerIds.map(id => {
-        if (!players[id]) {
-            return "Player X";
-        }
-        return players[id].name;
-    });
-    return names;
+        const names = playerIds.map(id => {
+            if (!players[id]) {
+                return "Player X";
+            }
+            return players[id].name;
+        });
+        return names;
     }
 }

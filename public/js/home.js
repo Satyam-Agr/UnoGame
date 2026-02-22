@@ -28,6 +28,6 @@ socket.on("roomJoined", ({ roomId }) => {
     window.location.href = `/lobby/${roomId}`;
 });
 //show error messages from server
-socket.on("errorMessage", (msg) => {
+socket.on("errorMessage", ({msg}) => {
     alert(msg);
 });

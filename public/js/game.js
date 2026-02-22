@@ -1,8 +1,8 @@
 let state={};//game state
 let thisPlayeridx=0;//current player index
+
 //socket connection
 const playerId = localStorage.getItem("playerId");//connect to socket with playerId for authentication
-
 const socket = io({auth : { playerId }});//create socket
 //to store playerId in localStorage when received from server
 socket.on("playerId", ( {playerId} ) => {
@@ -14,14 +14,29 @@ socket.on("connect", () => {
     socket.emit("joinGame", { roomId });
 });
 
+//receive game state updates from server
 socket.on("stateUpdate", (newState) => {
     state = newState;
     thisPlayeridx = state.players.findIndex(p => p.id === playerId);
     renderGame();
 });
+socket.on("playerLeft", (newState) => {
+    state = newState;
+    thisPlayeridx = state.players.findIndex(p => p.id === playerId);
+    alert("A player has left the game. Removing them from the game.");
+    //only one player left, end game
+    if(state.players.length<=1)
+    {
+        handleVictory(state.players[thisPlayeridx].name);
+        return;
+    }
+    const players=document.querySelectorAll(".player");
+    players[state.players.length].remove();//remove last player div
+    renderGame();
+});
 // win condition
-socket.on("gameOver", (winnerName) => {
-    handleVictory(winnerName);
+socket.on("gameOver", ({winner}) => {
+    handleVictory(winner);
 });
 
 //error handling
@@ -36,10 +51,8 @@ socket.on("errorMessage", ({msg, leave}) => {
 function renderPlayer()
 {
     const players=document.querySelectorAll(".player");
-    console.log("Rendering players...");
     for(let i=0;i<state.players.length;i++)
     {
-        console.log("Rendering player:", state.players[i].name);
         const playerDiv=players[i];
         const player=state.players[i];
         const cardEl = playerDiv.querySelector(".player__card-count");
@@ -117,11 +130,13 @@ document.querySelector('#uno-btn').addEventListener("click",()=>{
     if(state.gameOver)        return;
     socket.emit("declareUNO");
 });
-document.querySelector('#restart-btn').addEventListener("click",()=>{
-    renderGame();
+document.querySelector('#exit-btn').addEventListener("click",()=>{
+    socket.emit("exitGame");
+    window.location.href = `/`;
 });
 
-//helper functions to make a card
+//helper functions 
+//make a card
 function makeCard(card,cardIdx=-1)
 {
     const cardDiv = document.createElement("div");
@@ -144,6 +159,7 @@ function makeCard(card,cardIdx=-1)
     }
     return cardDiv;
 }
+//handle card click
 function handelCardClick(cardIdx)
 {
     const card = state.players[thisPlayeridx].hand[cardIdx];
@@ -163,8 +179,7 @@ function handelCardClick(cardIdx)
     else
         socket.emit("playCard", { cardIndex: cardIdx });
 }
-
-
+//handle victory
 function handleVictory(winnerName) {
     // win condition
     const winnerModal = document.getElementById("winner-modal");
