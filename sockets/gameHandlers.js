@@ -49,7 +49,10 @@ export default function gameHandlers(playerId, socket, io, games, players) {
     socket.on("exitGame", () => {
         const info = getPlayerInfo();
         if(!info) return;
-        socket.emit("errorMessage", { msg: "You have left the game" , leave: true});
+        if(!info.game.state.gameOver)
+        {
+            socket.emit("errorMessage", { msg: "You have left the game" , leave: true});
+        }
         removePlayerFromRoom(playerId, info.roomId, games, players, io);
     });
     //helper function to get game and player info

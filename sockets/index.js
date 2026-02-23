@@ -75,7 +75,8 @@ export function removePlayerFromRoom(playerId, roomId, games, players, io) {
         {
             game.state.currentPlayerIndex = 0;
         }
-        io.to(roomId).emit("playerLeft", game.state);
+        if(!game.state.gameOver)//don't emit playerLeft if game already over
+            io.to(roomId).emit("playerLeft", game.state);
     }
        
     else

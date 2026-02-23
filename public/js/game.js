@@ -37,6 +37,7 @@ socket.on("playerLeft", (newState) => {
 // win condition
 socket.on("gameOver", ({winner}) => {
     handleVictory(winner);
+    socket.emit("exitGame");
 });
 
 //error handling
