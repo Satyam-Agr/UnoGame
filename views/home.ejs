@@ -2,35 +2,62 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>UNO Online</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body>
+<body class="home-page">
 
-    <div class="account-icon">
-        👤
+    <div class="account-icon" aria-hidden="true">
+        Player Hub
     </div>
 
-    <div class="home-container">
+    <main class="container py-4 py-md-5">
+        <section class="hero text-center mb-4 mb-md-5">
+            <p class="hero__eyebrow mb-2">Realtime Multiplayer</p>
+            <h1 class="display-5 fw-bold mb-3">UNO Arena</h1>
+            <p class="lead mb-0">Create a room, invite friends, and play instantly.</p>
+        </section>
 
-        <div class="home-card">
-            <h2>Create Room</h2>
-            <form action="/create" method="POST">
-                <input type="text" name="name" placeholder="Your Name" required>
-                <button type="submit">Create</button>
-            </form>
+        <div class="home-container row g-4 justify-content-center">
+            <div class="col-12 col-md-6 col-lg-5">
+                <div class="home-card card h-100 shadow-lg border-0">
+                    <div class="card-body p-4 p-md-5">
+                        <h2 class="h4 mb-3">Create Room</h2>
+                        <p class="text-body-secondary mb-4">Start a new match and become the host.</p>
+                        <form action="/create" method="POST" class="vstack gap-3">
+                            <div>
+                                <label class="form-label mb-1" for="create-name">Name</label>
+                                <input id="create-name" class="form-control form-control-lg" type="text" name="name" placeholder="Your Name" required>
+                            </div>
+                            <button class="btn btn-danger btn-lg fw-semibold" type="submit">Create Room</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-5">
+                <div class="home-card card h-100 shadow-lg border-0">
+                    <div class="card-body p-4 p-md-5">
+                        <h2 class="h4 mb-3">Join Room</h2>
+                        <p class="text-body-secondary mb-4">Enter a room code to jump right in.</p>
+                        <form action="/join" method="POST" class="vstack gap-3">
+                            <div>
+                                <label class="form-label mb-1" for="join-name">Name</label>
+                                <input id="join-name" class="form-control form-control-lg" type="text" name="name" placeholder="Your Name" required>
+                            </div>
+                            <div>
+                                <label class="form-label mb-1" for="join-room">Room Code</label>
+                                <input id="join-room" class="form-control form-control-lg text-uppercase" type="text" name="roomId" placeholder="ABCD" required>
+                            </div>
+                            <button class="btn btn-dark btn-lg fw-semibold" type="submit">Join Room</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="home-card">
-            <h2>Join Room</h2>
-            <form action="/join" method="POST">
-                <input type="text" name="name" placeholder="Your Name" required>
-                <input type="text" name="roomId" placeholder="Room Code" required>
-                <button type="submit">Join</button>
-            </form>
-        </div>
-
-    </div>
+    </main>
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/home.js"></script>
 </body>

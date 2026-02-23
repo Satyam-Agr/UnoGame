@@ -1,98 +1,112 @@
+:root {
+    --bg-1: #fff8e8;
+    --bg-2: #ffe5d1;
+    --panel: #ffffffd9;
+    --text-main: #1f2430;
+    --text-muted: #596073;
+    --accent: #e63946;
+}
+
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #1e1e2f, #2a2a40);
-    color: white;
+    min-height: 100vh;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-main);
+    background:
+        radial-gradient(circle at 12% 18%, #ffd16680 0%, transparent 38%),
+        radial-gradient(circle at 84% 8%, #ef476f66 0%, transparent 42%),
+        linear-gradient(140deg, var(--bg-1), var(--bg-2));
+}
+
+.home-page,
+.lobby-page {
     display: flex;
-    justify-content: center;
     align-items: center;
-    height: 100vh;
+    justify-content: center;
 }
 
-/* Account Icon */
 .account-icon {
-    position: absolute;
-    top: 20px;
-    right: 25px;
-    font-size: 22px;
-    cursor: pointer;
+    position: fixed;
+    top: 16px;
+    right: 20px;
+    z-index: 20;
+    border-radius: 999px;
+    padding: 8px 14px;
+    background: #ffffffcc;
+    border: 1px solid #ffffff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
-/* Home Page */
-.home-container {
-    display: flex;
-    gap: 50px;
+.hero__eyebrow {
+    color: var(--accent);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.hero .lead {
+    color: var(--text-muted);
+}
+
+.home-card,
+.lobby-container {
+    border-radius: 18px;
+    background: var(--panel);
+    backdrop-filter: blur(4px);
 }
 
 .home-card {
-    background: rgba(255,255,255,0.1);
-    padding: 40px;
-    border-radius: 12px;
-    text-align: center;
-    width: 250px;
+    overflow: hidden;
 }
 
-.home-card h2 {
-    margin-bottom: 20px;
+.home-card .card-body {
+    border-top: 4px solid #ffd166;
 }
 
-.home-card input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 6px;
+.home-card .btn.btn-danger {
+    background: linear-gradient(90deg, #e63946, #ff6b6b);
     border: none;
 }
 
-.home-card button {
-    width: 100%;
-    padding: 10px;
+.home-card .btn.btn-dark {
+    background: linear-gradient(90deg, #2b2d42, #1d3557);
     border: none;
-    border-radius: 6px;
-    background: #ff5252;
-    color: white;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-/* Lobby */
-.lobby-container {
-    text-align: center;
-    width: 400px;
 }
 
 .room-code {
-    color: #ff5252;
+    color: var(--accent);
+    font-weight: 800;
+    letter-spacing: 0.04em;
 }
 
 .player-list {
-    margin: 30px 0;
+    display: grid;
+    gap: 0.75rem;
 }
 
 .player-item {
-    background: rgba(255,255,255,0.1);
-    padding: 12px;
-    margin: 8px 0;
-    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 14px;
+    padding: 0.8rem 1rem;
+    background: #f8f9ff;
+    border: 1px solid #ebedf7;
+    font-weight: 600;
 }
 
-.lobby-actions button {
-    padding: 10px 20px;
-    margin: 10px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.start-btn {
-    background: #4caf50;
-    color: white;
-}
-
-.leave-btn {
-    background: #f44336;
-    color: white;
-}
 .hidden {
-    display: none;
+    display: none !important;
+}
+
+@media (max-width: 767.98px) {
+    .account-icon {
+        top: 10px;
+        right: 10px;
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
 }

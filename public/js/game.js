@@ -82,31 +82,34 @@ function renderHand()
     //check if card is valid to play
     for(let i=0;i<cards.length;i++)
     {
-        if(cards[i].valid)
-            handDiv.appendChild(makeCard(cards[i],i));
-        else
-            handDiv.appendChild(makeCard(cards[i]));
+        handDiv.appendChild(makeCard(cards[i], {
+            cardIdx: i,
+            inHand: true,
+            playable: cards[i].valid
+        }));
     }
 }
 function renderBoard()
 {
     const drawDiv=document.querySelector('#draw-pile');
     const discardDiv=document.querySelector('#discard-pile');
-    const currColor=document.querySelector('#color-indicator');
     const message=document.querySelector('#game-message');
     const dirDiv=document.querySelector('.board__direction');
     //update direction   
     if(state.direction==1)
-        dirDiv.innerHTML="->";
+        dirDiv.textContent="↻";
     else
-        dirDiv.innerHTML="<-";
+        dirDiv.textContent="↺";
     //update draw pile
-    drawDiv.textContent=`Draw - ${state.drawPile.length}`;
+    drawDiv.innerHTML = '';
+    drawDiv.appendChild(makeCardBack());
+    const drawCount = document.createElement('span');
+    drawCount.classList.add('pile__count');
+    drawCount.textContent = `${state.drawPile.length}`;
+    drawDiv.appendChild(drawCount);
     //update discardpile
     discardDiv.innerHTML='';
     discardDiv.appendChild(makeCard(state.topCard));
-    //current color
-    currColor.textContent=`Current Color: ${state.currentColor}`;
     //game message
     message.textContent=`${state.players[state.currentPlayerIndex].name}'s turn`;
     
@@ -138,27 +141,78 @@ document.querySelector('#exit-btn').addEventListener("click",()=>{
 
 //helper functions 
 //make a card
-function makeCard(card,cardIdx=-1)
+function makeCard(card, options = {})
 {
+    const { cardIdx = -1, inHand = false, playable = false } = options;
     const cardDiv = document.createElement("div");
-    // Base class
     cardDiv.classList.add("card");
-    // Color modifier class
     cardDiv.classList.add(`card--${card.color}`);
-    // Display value
-    cardDiv.textContent = card.value;
-    //card playable or not
-    if(cardIdx===-1){
+    cardDiv.setAttribute('data-value', card.value);
+
+    const topCorner = document.createElement('span');
+    topCorner.classList.add('card__corner', 'card__corner--top');
+    topCorner.textContent = formatCardValue(card.value, true);
+
+    const bottomCorner = document.createElement('span');
+    bottomCorner.classList.add('card__corner', 'card__corner--bottom');
+    bottomCorner.textContent = formatCardValue(card.value, true);
+
+    const center = document.createElement('div');
+    center.classList.add('card__center');
+
+    const centerValue = document.createElement('span');
+    centerValue.classList.add('card__value');
+    centerValue.textContent = formatCardValue(card.value, false);
+    center.appendChild(centerValue);
+
+    cardDiv.appendChild(topCorner);
+    cardDiv.appendChild(bottomCorner);
+    cardDiv.appendChild(center);
+
+    // Mark 6 and 9 with underline styling to avoid orientation ambiguity.
+    if (card.value === 6 || card.value === 9) {
+        cardDiv.classList.add('card--mark-69');
+    }
+
+    if (inHand) {
+        cardDiv.style.zIndex = `${cardIdx + 1}`;
+    }
+
+    if(inHand && !playable){
         cardDiv.classList.add('card--disabled');
     }
-    else{
+    else if(inHand && playable){
         cardDiv.classList.add('card--valid');
-        // Click event
         cardDiv.addEventListener("click", ()=> {
             handelCardClick(cardIdx);
         });
     }
     return cardDiv;
+}
+function makeCardBack()
+{
+    const back = document.createElement('div');
+    back.classList.add('card', 'card--back');
+
+    const logo = document.createElement('span');
+    logo.classList.add('card__back-logo');
+    logo.textContent = 'UNO';
+    back.appendChild(logo);
+
+    return back;
+}
+function formatCardValue(value, compact)
+{
+    if(typeof value === 'number') return `${value}`;
+    switch(value)
+    {
+        case 'skip': return compact ? 'S' : '⊘';
+        case 'reverse': return compact ? 'R' : '↺';
+        case 'draw2': return '+2';
+        case 'wild': return compact ? 'W' : 'WILD';
+        case 'wildDraw4': return compact ? '+4' : 'WILD';
+        default: return `${value}`;
+    }
 }
 //handle card click
 function handelCardClick(cardIdx)
