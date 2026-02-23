@@ -79,7 +79,7 @@ export function playCard(playerIndex, cardIndex, wildColor, state) {
 export function drawCardBtn(playerIndex,state)
 {
     if(playerIndex !== state.currentPlayerIndex) return;//only allow current player to draw cards
-        drawCards(playerIndex, 1, state);
+    drawCards(playerIndex, 1, state);
     const handLength = state.players[playerIndex].hand.length;
     const cardDrawn = state.players[playerIndex].hand[handLength-1];
     //if the drawn card is playable, mark it as valid so that player can play it and only it
@@ -186,9 +186,22 @@ function applyCardEffect(card, state) {
 //draw cards
 function drawCards(playerIndex,count,state)
 {
+    if(state.drawPile.length<=0 && state.discardPile.length<=0) return;//no cards left to draw
     const player = state.players[playerIndex];
     player.saidUNO=false;//reset uno declaration if player draws a card
-    state.drawPile.deal(count, [player.hand]);
+    if(state.drawPile.length<=count)
+    {
+        count-=state.drawPile.length;
+        state.drawPile.deal(state.drawPile.length, [player.hand]);
+        //if draw pile is empty, shuffle discard pile and move to draw pile
+        state.drawPile = state.discardPile;
+        state.discardPile = [];
+        state.drawPile = Shuffle.shuffle({deck: state.drawPile});
+    }
+    if(state.drawPile.length<count)
+        state.drawPile.deal(state.drawPile.length, [player.hand]);
+    else
+        state.drawPile.deal(count, [player.hand]);
 }
 //validate if the played card is valid
 function isValid(card,state,playerIndex)
