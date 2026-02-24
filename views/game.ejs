@@ -15,19 +15,21 @@
         <p class="text-uppercase fw-semibold game-subtitle mb-1">Live Match</p>
         <h1 class="h3 mb-0">Room <span class="text-danger"><%= roomId %></span></h1>
     </header>
-
+    
     <div class="game__players">
+        <% if(players.length > 3) { %>
+            <div class="player player--right" id="player-2">
+                <div class="player__info">
+                    <span class="player__name"><%= players[3] %></span>
+                    <span class="player__card-count">Cards: 0</span>
+                    <span class="player__uno hidden">UNO!</span>
+                </div>
+            </div>
+        <% } %>
+
         <div class="player player--top" id="player-0">
             <div class="player__info">
                 <span class="player__name"><%= players[0] %></span>
-                <span class="player__card-count">Cards: 0</span>
-                <span class="player__uno hidden">UNO!</span>
-            </div>
-        </div>
-
-        <div class="player player--bottom player--active" id="player-3">
-            <div class="player__info">
-                <span class="player__name"><%= players[1] %></span>
                 <span class="player__card-count">Cards: 0</span>
                 <span class="player__uno hidden">UNO!</span>
             </div>
@@ -43,15 +45,13 @@
             </div>
         <% } %>
 
-        <% if(players.length > 3) { %>
-            <div class="player player--right" id="player-2">
-                <div class="player__info">
-                    <span class="player__name"><%= players[3] %></span>
-                    <span class="player__card-count">Cards: 0</span>
-                    <span class="player__uno hidden">UNO!</span>
-                </div>
+        <div class="player player--bottom player--active" id="player-3">
+            <div class="player__info">
+                <span class="player__name"><%= players[1] %></span>
+                <span class="player__card-count">Cards: 0</span>
+                <span class="player__uno hidden">UNO!</span>
             </div>
-        <% } %>
+        </div>
     </div>
 
     <section class="game__board mx-auto">
@@ -65,7 +65,10 @@
                     </div>
                     <span class="pile__count">0</span>
                 </div>
-                <div class="board__message" id="game-message">Game Started</div>
+                <div class="board__message-stack">
+                    <div class="board__message" id="game-message">Game Started</div>
+                    <div class="board__message board__message--event" id="event-message">Waiting for actions...</div>
+                </div>
                 <div class="pile pile--discard" id="discard-pile">Discard</div>
             </div>
         </div>
@@ -78,6 +81,7 @@
     <div class="game__actions mt-3">
         <button class="btn btn--draw" id="draw-btn">Draw Card</button>
         <button class="btn btn--uno" id="uno-btn">Call UNO</button>
+        <button class="btn btn--catch" id="catch-btn">Catch UNO</button>
         <button class="btn btn--exit" id="exit-btn">Exit</button>
     </div>
 

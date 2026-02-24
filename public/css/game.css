@@ -138,6 +138,15 @@ body {
     margin: 0 auto;
 }
 
+.board__message-stack {
+    min-height: 126px;
+    min-width: 190px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+}
+
 .pile {
     width: 96px;
     height: 144px;
@@ -179,7 +188,7 @@ body {
 }
 
 .board__message {
-    min-height: 126px;
+    min-height: 60px;
     min-width: 170px;
     display: flex;
     align-items: center;
@@ -193,6 +202,15 @@ body {
     border: 1px solid #ffffff2f;
     background: #02061773;
     text-shadow: 0 2px 10px #020617b8;
+    white-space: pre-line;
+}
+
+.board__message--event {
+    min-height: 56px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    border-style: dashed;
 }
 
 .game__hand {
@@ -398,6 +416,26 @@ body {
     padding: 0.58rem 1.2rem;
     font-weight: 700;
     letter-spacing: 0.02em;
+    transition: opacity 0.16s ease, filter 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.btn--active {
+    cursor: pointer;
+    opacity: 1;
+    filter: none;
+    transform: translateY(0);
+}
+
+.btn--active:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px #02061755;
+}
+
+.btn--inactive {
+    cursor: not-allowed;
+    opacity: 0.45;
+    filter: grayscale(0.45) saturate(0.8);
+    box-shadow: none;
 }
 
 .btn--draw {
@@ -407,6 +445,11 @@ body {
 
 .btn--uno {
     background: #dc2626;
+    color: #fff;
+}
+
+.btn--catch {
+    background: #f59e0b;
     color: #fff;
 }
 
@@ -522,9 +565,19 @@ body {
     }
 
     .board__message {
-        min-height: 112px;
+        min-height: 56px;
         min-width: 132px;
         font-size: 0.95rem;
+    }
+
+    .board__message-stack {
+        min-height: 118px;
+        min-width: 140px;
+    }
+
+    .board__message--event {
+        min-height: 52px;
+        font-size: 0.82rem;
     }
 
     .card {

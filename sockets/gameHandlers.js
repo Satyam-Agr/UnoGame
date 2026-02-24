@@ -1,4 +1,4 @@
-import { playCard, drawCardBtn, declareUNO } from "../game/gameLogic.js";
+import { playCard, drawCardBtn, declareUNO , catchUNO} from "../game/gameLogic.js";
 import { removePlayerFromRoom } from "./index.js";
 
 export default function gameHandlers(playerId, socket, io, games, players) {
@@ -29,6 +29,12 @@ export default function gameHandlers(playerId, socket, io, games, players) {
         else
         {
             io.to(info.roomId).emit("stateUpdate", info.game.state);
+            if(wildColor)
+            {
+                io.to(info.roomId).emit("message", {
+                    msg: `${info.game.state.players[info.playerIndex].name} played ${info.game.state.topCard.value}. Color -> ${wildColor}.`
+                });
+            }
         }
     });
     //draw a card(Draw Button in UI)
@@ -42,8 +48,18 @@ export default function gameHandlers(playerId, socket, io, games, players) {
     socket.on("declareUNO", () => {
         const info = getPlayerInfo();
         declareUNO(info.playerIndex, info.game.state);
-        socket.emit("stateUpdate", info.game.state);
         io.to(info.roomId).emit("stateUpdate", info.game.state);
+    });
+    //catch uno
+    socket.on("catchUNO", ({ targetPlayerIndex }) => {
+        const info = getPlayerInfo();
+        if(catchUNO( targetPlayerIndex, info.game.state))
+        {
+            io.to(info.roomId).emit("stateUpdate", info.game.state);
+            io.to(info.roomId).emit("message", {
+                msg: `${info.game.state.players[info.playerIndex].name} caught ${info.game.state.players[targetPlayerIndex].name}. Penalty: +2 cards.`
+            });
+        }
     });
     //exit game
     socket.on("exitGame", () => {

@@ -1,5 +1,7 @@
 let state={};//game state
 let thisPlayeridx=0;//current player index
+let latestEventMessage = "Waiting for actions...";
+let catchEnableTimeoutId = null;
 
 //socket connection
 const playerId = localStorage.getItem("playerId");//connect to socket with playerId for authentication
@@ -39,7 +41,11 @@ socket.on("gameOver", ({winner}) => {
     handleVictory(winner);
     socket.emit("exitGame");
 });
-
+socket.on("message", ({msg}) => {
+    latestEventMessage = formatEventMessage(msg);
+    const eventMessageEl = document.querySelector('#event-message');
+    if(eventMessageEl) eventMessageEl.textContent = latestEventMessage;
+});
 //error handling
 socket.on("errorMessage", ({msg, leave}) => {
     alert(msg);
@@ -52,17 +58,18 @@ socket.on("errorMessage", ({msg, leave}) => {
 function renderPlayer()
 {
     const players=document.querySelectorAll(".player");
-    for(let i=0;i<state.players.length;i++)
+    const numPlayers=state.players.length;
+    for(let i=0;i<numPlayers;i++)
     {
-        const playerDiv=players[i];
-        const player=state.players[i];
+        const playerDiv=players[(numPlayers-1-thisPlayeridx+i)%numPlayers];//calculate player div index based on current player index
+        const player=state.players[i];//
         const cardEl = playerDiv.querySelector(".player__card-count");
         const unoEl = playerDiv.querySelector(".player__uno");
         
         cardEl.textContent = `Card: ${player.hand.length}` ;
         
         //hide uno
-        if(player.saidUNO)
+        if(player.uno?.said)
             unoEl.classList.remove('hidden');
         else
             unoEl.classList.add('hidden');
@@ -93,8 +100,12 @@ function renderBoard()
 {
     const drawDiv=document.querySelector('#draw-pile');
     const discardDiv=document.querySelector('#discard-pile');
-    const message=document.querySelector('#game-message');
+    const turnMessage=document.querySelector('#game-message');
+    const eventMessage=document.querySelector('#event-message');
     const dirDiv=document.querySelector('.board__direction');
+    const drawBtn=document.querySelector('#draw-btn');
+    const unoBtn=document.querySelector('#uno-btn');
+    const catchBtn=document.querySelector('#catch-btn');
     //update direction   
     if(state.direction==1)
         dirDiv.textContent="↻";
@@ -111,9 +122,40 @@ function renderBoard()
     discardDiv.innerHTML='';
     discardDiv.appendChild(makeCard(state.topCard));
     //game message
-    message.textContent=`${state.players[state.currentPlayerIndex].name}'s turn`;
-    
-    
+    turnMessage.textContent=`${state.players[state.currentPlayerIndex].name}'s turn`;
+    if(eventMessage) eventMessage.textContent = latestEventMessage;
+    //button states
+    const thisPlayer = state.players[thisPlayeridx];
+    setButtonVisualState(drawBtn, false);
+    setButtonVisualState(unoBtn, false);
+    setButtonVisualState(catchBtn, false);
+
+    if(catchEnableTimeoutId){
+        clearTimeout(catchEnableTimeoutId);
+        catchEnableTimeoutId = null;
+    }
+
+    if(state.currentPlayerIndex===thisPlayeridx){
+        setButtonVisualState(drawBtn, true);
+    }
+    if(thisPlayer?.uno && !thisPlayer.uno.said){
+        setButtonVisualState(unoBtn, true);
+    }
+    const targetPlayer = state.players.find(p => p.uno?.catch);
+    if(targetPlayer && targetPlayer.id !== thisPlayer.id){
+        const graceTimeLeft = targetPlayer.uno.StartTimestamp + 3000 - Date.now();
+        if(graceTimeLeft <= 0){
+            setButtonVisualState(catchBtn, true);
+        } else {
+            setButtonVisualState(catchBtn, false);
+            catchEnableTimeoutId = setTimeout(() => {
+                const currentTarget = state.players.find(p => p.uno?.catch);
+                if(currentTarget?.id === targetPlayer.id){
+                    setButtonVisualState(catchBtn, true);
+                }
+            }, graceTimeLeft);
+        }
+    }
 }
 //main render function
 function renderGame()
@@ -125,14 +167,23 @@ function renderGame()
 //click events
 //draw a card
 document.querySelector('#draw-btn').addEventListener("click",()=>{
-    if(state.gameOver)
-        return;
+    if(state.gameOver)        return;
+    setButtonVisualState(document.querySelector('#draw-btn'), false);
     socket.emit("drawCard");
 });
 //declare uno
 document.querySelector('#uno-btn').addEventListener("click",()=>{
     if(state.gameOver)        return;
+    setButtonVisualState(document.querySelector('#uno-btn'), false);
     socket.emit("declareUNO");
+});
+//catch uno
+document.querySelector('#catch-btn').addEventListener("click",()=>{
+    if(state.gameOver)        return;
+    setButtonVisualState(document.querySelector('#catch-btn'), false);
+    const targetPlayerIndex = state.players.findIndex(p => p.uno?.catch);
+    if(targetPlayerIndex !== -1)
+        socket.emit("catchUNO", { targetPlayerIndex });
 });
 document.querySelector('#exit-btn').addEventListener("click",()=>{
     socket.emit("exitGame");
@@ -206,13 +257,39 @@ function formatCardValue(value, compact)
     if(typeof value === 'number') return `${value}`;
     switch(value)
     {
-        case 'skip': return compact ? 'S' : '⊘';
+        case 'skip': return compact ? '⊘' : '⊘';
         case 'reverse': return compact ? 'R' : '↺';
         case 'draw2': return '+2';
         case 'wild': return compact ? 'W' : 'WILD';
         case 'wildDraw4': return compact ? '+4' : 'WILD';
         default: return `${value}`;
     }
+}
+function formatEventMessage(msg = "")
+{
+    const cleanMsg = msg.replace(/\s+/g, " ").trim();
+    if(!cleanMsg) return "Waiting for actions...";
+    const maxLine = 34;
+    const words = cleanMsg.split(" ");
+    const lines = [];
+    let line = "";
+    for(const word of words){
+        const next = line ? `${line} ${word}` : word;
+        if(next.length > maxLine){
+            if(line) lines.push(line);
+            line = word;
+        } else {
+            line = next;
+        }
+    }
+    if(line) lines.push(line);
+    return lines.slice(0, 3).join("\n");
+}
+function setButtonVisualState(btn, isActive)
+{
+    if(!btn) return;
+    btn.classList.toggle('btn--active', isActive);
+    btn.classList.toggle('btn--inactive', !isActive);
 }
 //handle card click
 function handelCardClick(cardIdx)

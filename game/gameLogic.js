@@ -18,7 +18,7 @@ export function initGameState(playerIds, playerNames)
             id: playerIds[i],
             name: playerNames[i],
             hand: [],
-            saidUNO: false
+            uno: null
         });
     }
     // Create and shuffle deck
@@ -70,6 +70,19 @@ export function playCard(playerIndex, cardIndex, wildColor, state) {
         nextTurn(state);
     else
         applyCardEffect(selectedCard, state);
+    const previousPlayer = state.players[(playerIndex-1+state.players.length)%state.players.length];
+    if(previousPlayer.uno?.catch){
+        previousPlayer.uno.catch=false;
+        previousPlayer.uno.StartTimestamp=null;//reset uno catch status of previous player if they were not caught   
+    }
+    //check if player has only one card left
+    if (player.hand.length === 1) {
+        player.uno={
+                said: false,
+                catch: true,
+                StartTimestamp: Date.now()
+            };
+    }
     // Check win condition
     if (player.hand.length === 0) {
         state.gameOver = true;
@@ -98,8 +111,26 @@ export function drawCardBtn(playerIndex,state)
 export function declareUNO(playerIndex,state)
 {
     const player = state.players[playerIndex];
-    if(player.hand.length==1)
-        player.saidUNO = true;
+    //only allow player to declare uno if they have one card left and haven't declared yet
+    if(player.hand.length==1 && !player.uno?.said)
+    {
+        player.uno={
+                said: true,
+                catch: false,
+                StartTimestamp: null
+            };
+    }
+}
+//catch uno
+export function catchUNO(targetPlayerIndex,state)
+{
+    const targetPlayer = state.players[targetPlayerIndex];
+    if(!targetPlayer.uno?.catch) return false;
+    const timeSinceUNO = Date.now() - targetPlayer.uno.StartTimestamp;
+    if(timeSinceUNO <= 3000)        return false//3 seconds grace period
+    //penalty for being caught not saying UNO
+    drawCards(targetPlayerIndex, 2, state); //removal of the uno object is done in drawCards function
+    return true;
 }
 //change turn
 export function nextTurn(state)
@@ -188,7 +219,7 @@ function drawCards(playerIndex,count,state)
 {
     if(state.drawPile.length<=0 && state.discardPile.length<=0) return;//no cards left to draw
     const player = state.players[playerIndex];
-    player.saidUNO=false;//reset uno declaration if player draws a card
+    player.uno=null;//reset uno declaration if player draws a card
     if(state.drawPile.length<=count)
     {
         count-=state.drawPile.length;
