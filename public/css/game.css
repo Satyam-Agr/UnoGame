@@ -49,14 +49,42 @@ body {
     background: #ffffff22;
     border: 1px solid #ffffff33;
     backdrop-filter: blur(5px);
-    opacity: 0.55;
-    transition: transform 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+    opacity: 1;
+    transition: transform 0.2s ease, opacity 0.2s ease, border-color 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
 }
 
 .player--active {
-    opacity: 1;
     border-color: var(--accent);
+    border-width: 3px;
     transform: scale(1.03);
+}
+
+.player--faded {
+    opacity: 1;
+    filter: none;
+}
+
+.player--self {
+    background: #1d3a66cc;
+    filter: none;
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 2px #38bdf855, 0 10px 20px #02061766;
+}
+
+.player--self-turn {
+    animation: self-turn-pulse 1.3s ease-in-out infinite;
+}
+
+@keyframes self-turn-pulse {
+    0% {
+        box-shadow: 0 0 0 2px #38bdf855, 0 10px 20px #02061766;
+    }
+    50% {
+        box-shadow: 0 0 0 4px #f59e0b88, 0 14px 28px #02061788;
+    }
+    100% {
+        box-shadow: 0 0 0 2px #38bdf855, 0 10px 20px #02061766;
+    }
 }
 
 .player--top {

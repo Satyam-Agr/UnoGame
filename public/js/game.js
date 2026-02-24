@@ -1,7 +1,11 @@
 let state={};//game state
 let thisPlayeridx=0;//current player index
-let latestEventMessage = "Waiting for actions...";
+let latestEventMessage = "";
 let catchEnableTimeoutId = null;
+let eventMessageShownAt = 0;
+let waitingForCardMove = false;
+let eventMessageHideTimeoutId = null;
+const EVENT_MESSAGE_MIN_MS = 3000;
 
 //socket connection
 const playerId = localStorage.getItem("playerId");//connect to socket with playerId for authentication
@@ -18,14 +22,17 @@ socket.on("connect", () => {
 
 //receive game state updates from server
 socket.on("stateUpdate", (newState) => {
+    const prevTopCard = state.topCard;
     state = newState;
     thisPlayeridx = state.players.findIndex(p => p.id === playerId);
+    const topCardChanged = cardSignature(prevTopCard) !== cardSignature(state.topCard);
+    maybeHideEventMessage(topCardChanged);
     renderGame();
 });
 socket.on("playerLeft", (newState) => {
     state = newState;
     thisPlayeridx = state.players.findIndex(p => p.id === playerId);
-    alert("A player has left the game. Removing them from the game.");
+    showEventMessage("System: A player left the game.");
     //only one player left, end game
     if(state.players.length<=1)
     {
@@ -42,9 +49,7 @@ socket.on("gameOver", ({winner}) => {
     socket.emit("exitGame");
 });
 socket.on("message", ({msg}) => {
-    latestEventMessage = formatEventMessage(msg);
-    const eventMessageEl = document.querySelector('#event-message');
-    if(eventMessageEl) eventMessageEl.textContent = latestEventMessage;
+    showEventMessage(msg);
 });
 //error handling
 socket.on("errorMessage", ({msg, leave}) => {
@@ -63,9 +68,11 @@ function renderPlayer()
     {
         const playerDiv=players[(numPlayers-1-thisPlayeridx+i)%numPlayers];//calculate player div index based on current player index
         const player=state.players[i];//
+        const nameEl = playerDiv.querySelector(".player__name");
         const cardEl = playerDiv.querySelector(".player__card-count");
         const unoEl = playerDiv.querySelector(".player__uno");
         
+        nameEl.textContent = player.name;
         cardEl.textContent = `Card: ${player.hand.length}` ;
         
         //hide uno
@@ -79,6 +86,10 @@ function renderPlayer()
             playerDiv.classList.add('player--active');
         else
             playerDiv.classList.remove('player--active');
+
+        const isSelf = i === thisPlayeridx;
+        playerDiv.classList.toggle('player--self', isSelf);
+        playerDiv.classList.toggle('player--self-turn', isSelf && i === state.currentPlayerIndex);
     }
 }
 function renderHand()
@@ -123,7 +134,7 @@ function renderBoard()
     discardDiv.appendChild(makeCard(state.topCard));
     //game message
     turnMessage.textContent=`${state.players[state.currentPlayerIndex].name}'s turn`;
-    if(eventMessage) eventMessage.textContent = latestEventMessage;
+    if(eventMessage) updateEventMessageUI();
     //button states
     const thisPlayer = state.players[thisPlayeridx];
     setButtonVisualState(drawBtn, false);
@@ -163,6 +174,47 @@ function renderGame()
     renderPlayer();
     renderHand();
     renderBoard();
+}
+function showEventMessage(msg)
+{
+    latestEventMessage = formatEventMessage(msg);
+    eventMessageShownAt = Date.now();
+    waitingForCardMove = true;
+    if(eventMessageHideTimeoutId){
+        clearTimeout(eventMessageHideTimeoutId);
+        eventMessageHideTimeoutId = null;
+    }
+    updateEventMessageUI();
+}
+function updateEventMessageUI()
+{
+    const eventMessageEl = document.querySelector('#event-message');
+    if(!eventMessageEl) return;
+    eventMessageEl.textContent = latestEventMessage;
+    eventMessageEl.classList.toggle('hidden', !latestEventMessage);
+}
+function maybeHideEventMessage(topCardChanged)
+{
+    if(!waitingForCardMove || !latestEventMessage) return;
+    if(!topCardChanged) return;
+    const elapsed = Date.now() - eventMessageShownAt;
+    if(elapsed >= EVENT_MESSAGE_MIN_MS){
+        latestEventMessage = "";
+        waitingForCardMove = false;
+        updateEventMessageUI();
+        return;
+    }
+    eventMessageHideTimeoutId = setTimeout(() => {
+        latestEventMessage = "";
+        waitingForCardMove = false;
+        eventMessageHideTimeoutId = null;
+        updateEventMessageUI();
+    }, EVENT_MESSAGE_MIN_MS - elapsed);
+}
+function cardSignature(card)
+{
+    if(!card) return "";
+    return `${card.color}-${card.value}`;
 }
 //click events
 //draw a card
@@ -268,7 +320,7 @@ function formatCardValue(value, compact)
 function formatEventMessage(msg = "")
 {
     const cleanMsg = msg.replace(/\s+/g, " ").trim();
-    if(!cleanMsg) return "Waiting for actions...";
+    if(!cleanMsg) return "";
     const maxLine = 34;
     const words = cleanMsg.split(" ");
     const lines = [];
