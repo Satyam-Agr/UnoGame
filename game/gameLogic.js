@@ -2,6 +2,7 @@ import Shuffle from 'shuffle';//for shuffling the deck
 //initialize game state
 export function initGameState(playerIds, playerNames)
 {
+    //game state object
     const state = {
         players: [],
         currentPlayerIndex: -1,
@@ -70,10 +71,11 @@ export function playCard(playerIndex, cardIndex, wildColor, state) {
         nextTurn(state);
     else
         applyCardEffect(selectedCard, state);
+    //remove uno catch status of previous player if they were not caught
     const previousPlayer = state.players[(playerIndex-1+state.players.length)%state.players.length];
     if(previousPlayer.uno?.catch){
         previousPlayer.uno.catch=false;
-        previousPlayer.uno.StartTimestamp=null;//reset uno catch status of previous player if they were not caught   
+        previousPlayer.uno.StartTimestamp=null;   
     }
     //check if player has only one card left
     if (player.hand.length === 1) {
@@ -139,8 +141,10 @@ export function nextTurn(state)
     {
         card.valid = false;//reset valid status of cards at the start of each turn
     }
+    //increament the index
     state.currentPlayerIndex =(state.currentPlayerIndex + state.direction + state.players.length) 
     % state.players.length;
+    //mark valid cards in the new player's hand
     for( let card of state.players[state.currentPlayerIndex].hand)
     {
         if(isValid(card,state,state.currentPlayerIndex))
@@ -220,6 +224,7 @@ function drawCards(playerIndex,count,state)
     if(state.drawPile.length<=0 && state.discardPile.length<=0) return;//no cards left to draw
     const player = state.players[playerIndex];
     player.uno=null;//reset uno declaration if player draws a card
+    //if draw pile doesn't have enough cards, draw all remaining cards and shuffle discard pile into draw pile
     if(state.drawPile.length<=count)
     {
         count-=state.drawPile.length;
@@ -229,6 +234,7 @@ function drawCards(playerIndex,count,state)
         state.discardPile = [];
         state.drawPile = Shuffle.shuffle({deck: state.drawPile});
     }
+    //draw remaining cards from draw pile if count is still greater than the number of cards in draw pile
     if(state.drawPile.length<count)
         state.drawPile.deal(state.drawPile.length, [player.hand]);
     else

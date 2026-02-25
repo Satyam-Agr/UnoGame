@@ -399,6 +399,28 @@ body {
     text-shadow: 0 2px 8px #020617b3;
 }
 
+.card--empty-deck {
+    width: 80px;
+    height: 120px;
+    border-radius: 10px;
+    border-style: dashed;
+    border-color: #cbd5e1;
+    background: linear-gradient(145deg, #334155, #0f172a);
+    display: grid;
+    place-items: center;
+}
+
+.card__empty-label {
+    position: relative;
+    z-index: 1;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #e2e8f0;
+    text-transform: uppercase;
+    text-align: center;
+}
+
 .card--valid {
     cursor: pointer;
     transition: transform 0.16s ease, filter 0.16s ease, box-shadow 0.16s ease;
@@ -655,7 +677,16 @@ body {
         height: 104px;
     }
 
+    .card--empty-deck {
+        width: 70px;
+        height: 104px;
+    }
+
     .card__back-logo {
         font-size: 0.96rem;
+    }
+
+    .card__empty-label {
+        font-size: 0.66rem;
     }
 }

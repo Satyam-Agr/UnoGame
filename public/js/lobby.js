@@ -10,7 +10,7 @@ socket.on("connect", () => {
     console.log("Connected to server with socket ID:", socket.id);
     socket.emit("rejoinLobby", { roomId });
 });
-
+//update player list in lobby when there is a change
 socket.on("lobbyUpdate", (players) => {
     const list = document.querySelector(".player-list");
     list.innerHTML = "";
@@ -26,6 +26,7 @@ socket.emit("checkHost", { roomId });
 socket.on("hostStatus", ({ isHost }) => {   
     hostControls(isHost);
 });
+//update host controls when host changes
 socket.on("hostUpdate", ({ Host }) => {
     console.log("New host is:", Host);
     hostControls(Host === playerId);
@@ -46,6 +47,7 @@ document.querySelector(".leave-btn").addEventListener("click", () => {
     socket.emit("leaveRoom", { roomId });
     window.location.href = "/";
 });
+//helper function to show start button for host and hide for non-host
 function hostControls(isHost) {
     if (!isHost) return;
     const startBtn = document.querySelector(".start-btn");

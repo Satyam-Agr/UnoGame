@@ -25,6 +25,7 @@ socket.on("stateUpdate", (newState) => {
     const prevTopCard = state.topCard;
     state = newState;
     thisPlayeridx = state.players.findIndex(p => p.id === playerId);
+    //check if top card changed to maybe hide event message
     const topCardChanged = cardSignature(prevTopCard) !== cardSignature(state.topCard);
     maybeHideEventMessage(topCardChanged);
     renderGame();
@@ -48,6 +49,7 @@ socket.on("gameOver", ({winner}) => {
     handleVictory(winner);
     socket.emit("exitGame");
 });
+// game event messages
 socket.on("message", ({msg}) => {
     showEventMessage(msg);
 });
@@ -64,6 +66,7 @@ function renderPlayer()
 {
     const players=document.querySelectorAll(".player");
     const numPlayers=state.players.length;
+    //render each player info based on current player index to maintain consistent order (current player always at bottom)
     for(let i=0;i<numPlayers;i++)
     {
         const playerDiv=players[(numPlayers-1-thisPlayeridx+i)%numPlayers];//calculate player div index based on current player index
@@ -86,12 +89,13 @@ function renderPlayer()
             playerDiv.classList.add('player--active');
         else
             playerDiv.classList.remove('player--active');
-
+        //highlight self player
         const isSelf = i === thisPlayeridx;
         playerDiv.classList.toggle('player--self', isSelf);
         playerDiv.classList.toggle('player--self-turn', isSelf && i === state.currentPlayerIndex);
     }
 }
+//render hand of this player
 function renderHand()
 {
     const handDiv=document.querySelector('#hand-container');
@@ -107,6 +111,7 @@ function renderHand()
         }));
     }
 }
+//render board 
 function renderBoard()
 {
     const drawDiv=document.querySelector('#draw-pile');
@@ -123,12 +128,23 @@ function renderBoard()
     else
         dirDiv.textContent="↺";
     //update draw pile
-    drawDiv.innerHTML = '';
-    drawDiv.appendChild(makeCardBack());
-    const drawCount = document.createElement('span');
-    drawCount.classList.add('pile__count');
-    drawCount.textContent = `${state.drawPile.length}`;
-    drawDiv.appendChild(drawCount);
+    const drawPileCount = state.drawPile.length;
+    const drawCountEl = drawDiv.querySelector('.pile__count');
+    const currentDrawCardEl = drawDiv.querySelector('.card');
+
+    if(drawCountEl){
+        drawCountEl.textContent = `${drawPileCount}`;
+    }
+
+    if(drawPileCount === 0){
+        if(!currentDrawCardEl.classList.contains('card--empty-deck')){
+            const emptyDeckCard = makeEmptyDeckCard();
+            currentDrawCardEl.replaceWith(emptyDeckCard);
+        }
+    } else if(!currentDrawCardEl.classList.contains('card--back')){
+        const backCard = makeCardBack();
+        currentDrawCardEl.replaceWith(backCard);
+    }
     //update discardpile
     discardDiv.innerHTML='';
     discardDiv.appendChild(makeCard(state.topCard));
@@ -140,21 +156,24 @@ function renderBoard()
     setButtonVisualState(drawBtn, false);
     setButtonVisualState(unoBtn, false);
     setButtonVisualState(catchBtn, false);
-
+    //clear uno catch button timeout if any when render board to avoid potential bugs
     if(catchEnableTimeoutId){
         clearTimeout(catchEnableTimeoutId);
         catchEnableTimeoutId = null;
     }
-
+    //draw button plabled only if it's your turn
     if(state.currentPlayerIndex===thisPlayeridx){
         setButtonVisualState(drawBtn, true);
     }
+    //uno button enabled if player has one card and hasn't declared uno yet
     if(thisPlayer?.uno && !thisPlayer.uno.said){
         setButtonVisualState(unoBtn, true);
     }
+    //catch button enabled if any player is in uno catch status(except self)
     const targetPlayer = state.players.find(p => p.uno?.catch);
     if(targetPlayer && targetPlayer.id !== thisPlayer.id){
         const graceTimeLeft = targetPlayer.uno.StartTimestamp + 3000 - Date.now();
+        //if grace time already passed, enable catch button immediately, otherwise set timeout to enable it when grace time is up
         if(graceTimeLeft <= 0){
             setButtonVisualState(catchBtn, true);
         } else {
@@ -175,47 +194,6 @@ function renderGame()
     renderHand();
     renderBoard();
 }
-function showEventMessage(msg)
-{
-    latestEventMessage = formatEventMessage(msg);
-    eventMessageShownAt = Date.now();
-    waitingForCardMove = true;
-    if(eventMessageHideTimeoutId){
-        clearTimeout(eventMessageHideTimeoutId);
-        eventMessageHideTimeoutId = null;
-    }
-    updateEventMessageUI();
-}
-function updateEventMessageUI()
-{
-    const eventMessageEl = document.querySelector('#event-message');
-    if(!eventMessageEl) return;
-    eventMessageEl.textContent = latestEventMessage;
-    eventMessageEl.classList.toggle('hidden', !latestEventMessage);
-}
-function maybeHideEventMessage(topCardChanged)
-{
-    if(!waitingForCardMove || !latestEventMessage) return;
-    if(!topCardChanged) return;
-    const elapsed = Date.now() - eventMessageShownAt;
-    if(elapsed >= EVENT_MESSAGE_MIN_MS){
-        latestEventMessage = "";
-        waitingForCardMove = false;
-        updateEventMessageUI();
-        return;
-    }
-    eventMessageHideTimeoutId = setTimeout(() => {
-        latestEventMessage = "";
-        waitingForCardMove = false;
-        eventMessageHideTimeoutId = null;
-        updateEventMessageUI();
-    }, EVENT_MESSAGE_MIN_MS - elapsed);
-}
-function cardSignature(card)
-{
-    if(!card) return "";
-    return `${card.color}-${card.value}`;
-}
 //click events
 //draw a card
 document.querySelector('#draw-btn').addEventListener("click",()=>{
@@ -234,7 +212,7 @@ document.querySelector('#catch-btn').addEventListener("click",()=>{
     if(state.gameOver)        return;
     setButtonVisualState(document.querySelector('#catch-btn'), false);
     const targetPlayerIndex = state.players.findIndex(p => p.uno?.catch);
-    if(targetPlayerIndex !== -1)
+    if(targetPlayerIndex !== -1 && targetPlayerIndex !== thisPlayeridx)
         socket.emit("catchUNO", { targetPlayerIndex });
 });
 document.querySelector('#exit-btn').addEventListener("click",()=>{
@@ -292,6 +270,7 @@ function makeCard(card, options = {})
     }
     return cardDiv;
 }
+//make card back and empty deck card
 function makeCardBack()
 {
     const back = document.createElement('div');
@@ -304,6 +283,20 @@ function makeCardBack()
 
     return back;
 }
+//make empty deck card
+function makeEmptyDeckCard()
+{
+    const emptyDeck = document.createElement('div');
+    emptyDeck.classList.add('card', 'card--empty-deck');
+
+    const label = document.createElement('span');
+    label.classList.add('card__empty-label');
+    label.textContent = 'Deck Empty';
+    emptyDeck.appendChild(label);
+
+    return emptyDeck;
+}
+//formating functions
 function formatCardValue(value, compact)
 {
     if(typeof value === 'number') return `${value}`;
@@ -337,6 +330,7 @@ function formatEventMessage(msg = "")
     if(line) lines.push(line);
     return lines.slice(0, 3).join("\n");
 }
+//set button active/inactive visual state
 function setButtonVisualState(btn, isActive)
 {
     if(!btn) return;
@@ -347,6 +341,7 @@ function setButtonVisualState(btn, isActive)
 function handelCardClick(cardIdx)
 {
     const card = state.players[thisPlayeridx].hand[cardIdx];
+    //if card is wild, show color selection modal, otherwise play card directly
     if(card.color === 'wild')
     {
         const wildColorSelect = document.querySelector('#wild-color-modal');
@@ -354,6 +349,7 @@ function handelCardClick(cardIdx)
         for(let color of ['green', 'yellow', 'red', 'blue'])
         {
             const selectedColor=wildColorSelect.querySelector(`#select-${color}`);
+            //emit playCard event with selected color when a color is selected
             selectedColor.onclick = ()=>{
                 wildColorSelect.classList.add('hidden');
                 socket.emit("playCard", { cardIndex: cardIdx, wildColor:color });
@@ -395,4 +391,46 @@ function handleVictory(winnerName) {
             window.location.href = "/";
         }
     }, 1000);
+}
+//show event message handler functions
+function showEventMessage(msg)
+{
+    latestEventMessage = formatEventMessage(msg);
+    eventMessageShownAt = Date.now();
+    waitingForCardMove = true;
+    if(eventMessageHideTimeoutId){
+        clearTimeout(eventMessageHideTimeoutId);
+        eventMessageHideTimeoutId = null;
+    }
+    updateEventMessageUI();
+}
+function updateEventMessageUI()
+{
+    const eventMessageEl = document.querySelector('#event-message');
+    if(!eventMessageEl) return;
+    eventMessageEl.textContent = latestEventMessage;
+    eventMessageEl.classList.toggle('hidden', !latestEventMessage);
+}
+function maybeHideEventMessage(topCardChanged)
+{
+    if(!waitingForCardMove || !latestEventMessage) return;
+    if(!topCardChanged) return;
+    const elapsed = Date.now() - eventMessageShownAt;
+    if(elapsed >= EVENT_MESSAGE_MIN_MS){
+        latestEventMessage = "";
+        waitingForCardMove = false;
+        updateEventMessageUI();
+        return;
+    }
+    eventMessageHideTimeoutId = setTimeout(() => {
+        latestEventMessage = "";
+        waitingForCardMove = false;
+        eventMessageHideTimeoutId = null;
+        updateEventMessageUI();
+    }, EVENT_MESSAGE_MIN_MS - elapsed);
+}
+function cardSignature(card)
+{
+    if(!card) return "";
+    return `${card.color}-${card.value}`;
 }

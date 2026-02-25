@@ -30,9 +30,6 @@ export default function registerSockets(io, games, players) {
             clearTimeout(players[playerId].disconnectTimer);
             players[playerId].disconnectTimer = null;
         }
-        //temporary logs to check current games and players
-        console.log("Current games:", games);
-        console.log("Current players:", players);
         //lobby logic
         lobbyHandlers(playerId, socket, io, games, players);
         //game logic
@@ -88,7 +85,7 @@ export function removePlayerFromRoom(playerId, roomId, games, players, io) {
             io.to(roomId).emit("hostUpdate", { Host: game.hostId });
         }
     }
-    //get player names from player ids
+    //helper function to get player names from player ids
     function playerNames(playerIds) {
         const names = playerIds.map(id => {
             if (!players[id]) {
