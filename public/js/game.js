@@ -5,7 +5,8 @@ let catchEnableTimeoutId = null;
 let eventMessageShownAt = 0;
 let waitingForCardMove = false;
 let eventMessageHideTimeoutId = null;
-const EVENT_MESSAGE_MIN_MS = 3000;
+const EVENT_MESSAGE_MIN_MS = 5000;//minimum time to show event message before hiding it
+const GRACETIME = 1500;//grace time for catching a player who forgot to say UNO
 
 //socket connection
 const playerId = localStorage.getItem("playerId");//connect to socket with playerId for authentication
@@ -124,9 +125,9 @@ function renderBoard()
     const catchBtn=document.querySelector('#catch-btn');
     //update direction   
     if(state.direction==1)
-        dirDiv.textContent="↻";
-    else
         dirDiv.textContent="↺";
+    else
+        dirDiv.textContent="↻";
     //update draw pile
     const drawPileCount = state.drawPile.length;
     const drawCountEl = drawDiv.querySelector('.pile__count');
@@ -172,7 +173,7 @@ function renderBoard()
     //catch button enabled if any player is in uno catch status(except self)
     const targetPlayer = state.players.find(p => p.uno?.catch);
     if(targetPlayer && targetPlayer.id !== thisPlayer.id){
-        const graceTimeLeft = targetPlayer.uno.StartTimestamp + 3000 - Date.now();
+        const graceTimeLeft = targetPlayer.uno.StartTimestamp + GRACETIME - Date.now();
         //if grace time already passed, enable catch button immediately, otherwise set timeout to enable it when grace time is up
         if(graceTimeLeft <= 0){
             setButtonVisualState(catchBtn, true);

@@ -1,4 +1,5 @@
 import Shuffle from 'shuffle';//for shuffling the deck
+const GRACETIME = 1500; //1.5 seconds grace time for catching a player who forgot to say UNO
 //initialize game state
 export function initGameState(playerIds, playerNames)
 {
@@ -129,7 +130,7 @@ export function catchUNO(targetPlayerIndex,state)
     const targetPlayer = state.players[targetPlayerIndex];
     if(!targetPlayer.uno?.catch) return false;
     const timeSinceUNO = Date.now() - targetPlayer.uno.StartTimestamp;
-    if(timeSinceUNO <= 3000)        return false//3 seconds grace period
+    if(timeSinceUNO <= GRACETIME)        return false//3 seconds grace period
     //penalty for being caught not saying UNO
     drawCards(targetPlayerIndex, 2, state); //removal of the uno object is done in drawCards function
     return true;
