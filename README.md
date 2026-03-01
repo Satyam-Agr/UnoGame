@@ -1,58 +1,47 @@
-# UNO Arena 🎮
-A real-time multiplayer UNO project built with **Node.js + Express + Socket.IO**.
+# UNO Arena
+Real-time multiplayer UNO built with Node.js, Express, EJS, and Socket.IO.
 
-This project is made by a dev, for devs who want to spin up a fast multiplayer card game and share it with friends on local Wi‑Fi.
+## Quick Start (PowerShell)
+Run from the project root:
 
-## Quick Start (one command)
-If you already have **Node.js** and **npm** installed:
-
-```bash
-./run-local.sh
+```powershell
+./run-local.ps1
 ```
 
 The script will:
-1. Install dependencies (safe to run repeatedly).
-2. Check if port `3000` is free. If not, it finds the next free port in `3000-3999`.
-3. Start the server on the selected port.
-4. Detect your LAN IP (for same-Wi‑Fi players).
-5. Print a single shareable URL like:
-   - `http://192.168.1.20:3000`
+1. Install dependencies.
+2. Find an available port in `3000-3999`.
+3. Start the server.
+4. Print a shareable LAN URL.
 
-Copy that URL and send it to friends on the same network.
+If PowerShell blocks script execution in your current terminal, run:
 
----
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+```
 
-## Manual Run (classic)
-```bash
+Then run:
+
+```powershell
+./run-local.ps1
+```
+
+## Manual Run
+```powershell
 npm install
 npm start
 ```
 
-Default app URL:
+Default URL:
 - `http://localhost:3000`
 
----
-
 ## Requirements
-- Node.js (recommended: v18+)
+- Node.js (v18+ recommended)
 - npm
-- A modern browser (Chrome/Edge/Firefox/Safari)
+- Modern browser
 
----
-
-## Local Multiplayer Rules (important)
-These are practical things you must ensure yourself (cannot be fully enforced in code):
-
-- All players must be on the **same Wi‑Fi/LAN** (unless you deploy to cloud or use a tunnel).
-- Host machine firewall must allow incoming traffic on the selected port.
-- Keep the host terminal open while playing (closing it stops the server).
-- Use stable Wi‑Fi; frequent disconnects can kick players.
-- Max room size is 4 players.
-
----
-
-## Dev Notes
-- Uses EJS views for pages and Socket.IO for real-time game events.
-- In-memory state (`games`, `players`) means rooms reset when server restarts.
-
-Have fun and ship weird game-night ideas ✨
+## Local Multiplayer Notes
+- Players should be on the same LAN/Wi-Fi.
+- Host firewall must allow inbound traffic on the selected port.
+- Keep the host terminal running while the game is active.
+- Room state is in-memory (`games`, `players`) and resets on restart.
