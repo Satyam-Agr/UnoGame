@@ -32,9 +32,11 @@ app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, 'views'))
 
 //to stablish a server
-const port = 3000;
+const port = Number(process.env.PORT) || 3000;
 server.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`)
+  if (process.env.SILENT_STARTUP !== '1') {
+    console.log(`Server is running on http://localhost:${port}`)
+  }
 })
 
 //Game Logic
